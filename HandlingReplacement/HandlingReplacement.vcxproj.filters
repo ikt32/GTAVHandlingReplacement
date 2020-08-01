@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Memory">
+      <UniqueIdentifier>{4b24b3f9-199b-487c-9205-a2003847f5e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Utils">
+      <UniqueIdentifier>{7caa300e-5744-46ac-b7d9-dd717964a79f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Implementation">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="HandlingReplacement.h">
+      <Filter>Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="HandlingContext.h">
+      <Filter>Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Main.h">
+      <Filter>Implementation</Filter>
+    </ClInclude>
+    <ClInclude Include="Pattern.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="sysAllocator.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="VExt.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="HandlingData.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="atArray.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="Logger.h">
+      <Filter>Utils</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="HandlingReplacement.cpp">
+      <Filter>Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="DllMain.cpp">
+      <Filter>Implementation</Filter>
+    </ClCompile>
+    <ClCompile Include="Pattern.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="sysAllocator.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="VExt.cpp">
+      <Filter>Memory</Filter>
+    </ClCompile>
+    <ClCompile Include="Logger.cpp">
+      <Filter>Utils</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
