@@ -40,6 +40,12 @@
     <ClInclude Include="Logger.h">
       <Filter>Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Hooking.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
+    <ClInclude Include="atPool.h">
+      <Filter>Memory</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="HandlingReplacement.cpp">

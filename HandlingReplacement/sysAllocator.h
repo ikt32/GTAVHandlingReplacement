@@ -3,6 +3,9 @@
  */
 
 #pragma once
+
+#include "Hooking.h"
+
 #include <cstdint>
 #include <intrin.h>
 
@@ -28,10 +31,9 @@ namespace rage {
 
     inline sysMemAllocator* GetAllocator()
     {
-        sysMemAllocator* allocator = *(sysMemAllocator**)(*(uintptr_t*)(__readgsqword(88)) + sysMemAllocator::GetAllocatorTlsOffset());
+        sysMemAllocator* allocator = *(sysMemAllocator**)(hook::get_tls() + sysMemAllocator::GetAllocatorTlsOffset());
 
-        if (!allocator)
-        {
+        if (!allocator) {
             return sysMemAllocator::UpdateAllocatorValue();
         }
 
