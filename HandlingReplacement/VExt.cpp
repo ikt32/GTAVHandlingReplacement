@@ -4,17 +4,17 @@
 #include "Pattern.h"
 
 namespace {
-    uintptr_t(*GetAddressOfEntity)(int entity) = nullptr;
+uintptr_t(*GetAddressOfEntity)(int entity) = nullptr;
 
-    int handlingOffset = 0;
-    int wheelsPtrOffset = 0;
-    int numWheelsOffset = 0;
+int handlingOffset = 0;
+int wheelsPtrOffset = 0;
+int numWheelsOffset = 0;
 }
 
 void VExt::Init() {
     auto addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
-    if (!addr) 
-        Logger::Write(ERROR, "Couldn't find GetAddressOfEntity");
+    if (!addr)
+        Logger::Write(ERROR_, "Couldn't find GetAddressOfEntity");
     GetAddressOfEntity = reinterpret_cast<uintptr_t(*)(int)>(addr);
 
     addr = Pattern::Find("3C 03 0F 85 ? ? ? ? 48 8B 41 20 48 8B 88");
@@ -75,7 +75,7 @@ uint64_t VExt::GetWheelHandlingPtr(int handle, uint8_t index) {
 
 void VExt::SetWheelHandlingPtr(int handle, uint8_t index, uint64_t value) {
     if (handlingOffset == 0) return;
-    
+
     auto wheelPtr = GetWheelsPtr(handle);
     if (!wheelPtr) return;
 

@@ -3,21 +3,21 @@
 #include "HandlingData.h"
 #include "VExt.h"
 
-struct HandlingContext {
-    HandlingContext() = default;
-    HandlingContext(int v, CHandlingData* o, CHandlingData* r)
+struct SHandlingContext {
+    SHandlingContext() = default;
+    SHandlingContext(int v, CHandlingData* o, CHandlingData* r)
         : Vehicle(v)
         , OriginalHandling(o)
         , ReplacedHandling(r)
         , TimesReferenced(0) {}
 
-    HandlingContext(const HandlingContext& hc)
+    SHandlingContext(const SHandlingContext& hc)
         : Vehicle(hc.Vehicle)
         , OriginalHandling(hc.OriginalHandling)
         , ReplacedHandling(hc.ReplacedHandling)
         , TimesReferenced(hc.TimesReferenced) {}
 
-    HandlingContext(HandlingContext&& hc) noexcept
+    SHandlingContext(SHandlingContext&& hc) noexcept
         : Vehicle(hc.Vehicle)
         , OriginalHandling(hc.OriginalHandling)
         , ReplacedHandling(hc.ReplacedHandling)
@@ -28,7 +28,7 @@ struct HandlingContext {
         hc.TimesReferenced = 0;
     }
 
-    HandlingContext& operator=(const HandlingContext& other) {
+    SHandlingContext& operator=(const SHandlingContext& other) {
         if (this == &other)
             return *this;
 
@@ -39,7 +39,7 @@ struct HandlingContext {
         return *this;
     }
 
-    HandlingContext& operator=(HandlingContext&& other) noexcept {
+    SHandlingContext& operator=(SHandlingContext&& other) noexcept {
         Vehicle = other.Vehicle;
         OriginalHandling = other.OriginalHandling;
         ReplacedHandling = other.ReplacedHandling;
@@ -47,7 +47,7 @@ struct HandlingContext {
         return *this;
     }
 
-    ~HandlingContext() {
+    ~SHandlingContext() {
         if (!OriginalHandling || !ReplacedHandling || !Vehicle)
             return;
         Logger::Write(DEBUG, "[Handling] Deleting handling for [%p] to [%p]", Vehicle, OriginalHandling);
@@ -56,12 +56,8 @@ struct HandlingContext {
             VExt::SetWheelHandlingPtr(Vehicle, idx, (uint64_t)OriginalHandling);
         }
         Logger::Write(DEBUG, "[Handling] Restored handling for [%p] to [%p]", Vehicle, OriginalHandling);
-        // delete ReplacedHandling;
-        rage::GetAllocator()->free(ReplacedHandling);
-        Vehicle = 0;
-        ReplacedHandling = nullptr;
-        OriginalHandling = nullptr;
-        TimesReferenced = 0;
+
+        // Do not delete ReplacedHandling, just leave it... hanging there?
     }
     int Vehicle = 0;
     CHandlingData* OriginalHandling = nullptr;

@@ -136,7 +136,7 @@
       <WarningLevel>Level3</WarningLevel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>HR_EXPORTS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NOMINMAX;WIN32_LEAN_AND_MEAN;HR_EXPORTS;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -150,6 +150,9 @@
     <PreBuildEvent>
       <Command>copy /b $(ProjectDir)DllMain.cpp +,,</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y "$(TargetDir)$(TargetFileName)" "D:\Games\Steam\steamapps\common\Grand Theft Auto V\"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="atArray.h" />
@@ -159,7 +162,6 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Pattern.h" />
-    <ClInclude Include="sysAllocator.h" />
     <ClInclude Include="VExt.h" />
   </ItemGroup>
   <ItemGroup>
@@ -167,7 +169,6 @@
     <ClCompile Include="HandlingReplacement.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Pattern.cpp" />
-    <ClCompile Include="sysAllocator.cpp" />
     <ClCompile Include="VExt.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
