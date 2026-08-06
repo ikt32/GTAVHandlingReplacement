@@ -6,7 +6,9 @@
 
 #include <Windows.h>
 #include <memory>
+#include <new>
 #include <unordered_map>
+#include <vector>
 
 namespace {
 std::unordered_map<int, std::shared_ptr<SHandlingContext>> gStoredHandlings{};
@@ -16,28 +18,59 @@ void replaceHandling(int vehicle) {
     Logger::Write(DEBUG, "[Handling] Replacing handling for vehicle [%X]", vehicle);
 
     CHandlingData* origHandling = (CHandlingData*)VExt::GetHandlingPtr(vehicle);
-    CHandlingData* newHandling = new CHandlingData; //(CHandlingData*)rage::GetAllocator()->allocate(sizeof(CHandlingData), 16, 0);
+
+    // Allocate raw, 16-byte-aligned memory instead of using a plain `new CHandlingData`.
+    // We only ever memcpy raw bytes in/out of this block and never rely on the C++
+    // constructor/destructor running on it, so operator new/delete (not new/delete
+    // expressions) is the correct, symmetric pair to use here. This also matches the
+    // alignment the game's own allocator expects for this struct.
+    auto* newHandling = static_cast<CHandlingData*>(
+        ::operator new(sizeof(CHandlingData), std::align_val_t(16)));
     memcpy(newHandling, origHandling, sizeof(*origHandling));
 
-    CBaseSubHandlingData* shds[6] = {};
+    // The memcpy above copied m_subHandlingData's atArray header verbatim, which means
+    // newHandling->m_subHandlingData.m_offset currently points at the SAME backing
+    // array as origHandling - i.e. shared with every other vehicle using this handling
+    // entry. We must give newHandling its own backing array before touching any
+    // entries, otherwise writing cloned pointers into it would corrupt that shared data.
+    CBaseSubHandlingData** subHandlingArray = nullptr;
+    uint16_t subHandlingCount = origHandling->m_subHandlingData.GetCount();
+    std::vector<CBaseSubHandlingData*> clonedSubHandlings;
 
-    //for (int i = 0; i < newHandling->m_subHandlingData.GetCount(); i++) {
-    //    if (newHandling->m_subHandlingData.Get(i)) {
-    //        shds[i] = (CBaseSubHandlingData*)rage::GetAllocator()->allocate(1024, 16, 0);
-    //        memcpy(shds[i], newHandling->m_subHandlingData.Get(i), 1024);
-    //
-    //        Logger::Write(DEBUG, "[SubHandlingData] [%p] -> [%p]", newHandling->m_subHandlingData.Get(i), shds[i]);
-    //    }
-    //}
-    //
-    //newHandling->m_subHandlingData.m_offset = nullptr;
-    //newHandling->m_subHandlingData.Clear();
-    //newHandling->m_subHandlingData.Set(0, shds[0]);
-    //newHandling->m_subHandlingData.Set(1, shds[1]);
-    //newHandling->m_subHandlingData.Set(2, shds[2]);
-    //newHandling->m_subHandlingData.Set(3, shds[3]);
-    //newHandling->m_subHandlingData.Set(4, shds[4]);
-    //newHandling->m_subHandlingData.Set(5, shds[5]);
+    if (subHandlingCount > 0) {
+        subHandlingArray = static_cast<CBaseSubHandlingData**>(
+            ::operator new(sizeof(CBaseSubHandlingData*) * subHandlingCount, std::align_val_t(16)));
+
+        for (uint16_t idx = 0; idx < subHandlingCount; ++idx) {
+            CBaseSubHandlingData* origSubHandling = origHandling->m_subHandlingData.Get(idx);
+            if (!origSubHandling) {
+                subHandlingArray[idx] = nullptr;
+                continue;
+            }
+
+            eHandlingType type = origSubHandling->GetHandlingType();
+            size_t subSize = GetSubHandlingDataSize(type);
+            if (subSize == 0) {
+                // Unknown/unresolvable type - don't guess a size and risk heap
+                // corruption. Fall back to sharing the original, unowned pointer.
+                Logger::Write(WARN, "[Handling] Unknown subhandling type %d for vehicle [%X], sharing original", (int)type, vehicle);
+                subHandlingArray[idx] = origSubHandling;
+                continue;
+            }
+
+            auto* clonedSubHandling = static_cast<CBaseSubHandlingData*>(
+                ::operator new(subSize, std::align_val_t(16)));
+            memcpy(clonedSubHandling, origSubHandling, subSize);
+
+            subHandlingArray[idx] = clonedSubHandling;
+            clonedSubHandlings.push_back(clonedSubHandling);
+        }
+    }
+
+    newHandling->m_subHandlingData.m_offset = subHandlingArray;
+    // Sub-handling data pointers inside newHandling now point either at freshly cloned,
+    // owned blocks (freed in SHandlingContext's destructor) or, for any type we
+    // couldn't confidently resolve, back at the original shared struct.
 
     gStoredHandlings[vehicle] = {
         std::make_shared<SHandlingContext>(
@@ -45,6 +78,9 @@ void replaceHandling(int vehicle) {
             origHandling,
             newHandling)
     };
+    gStoredHandlings[vehicle]->SubHandlingArray = subHandlingArray;
+    gStoredHandlings[vehicle]->SubHandlingCount = subHandlingCount;
+    gStoredHandlings[vehicle]->ClonedSubHandlings = std::move(clonedSubHandlings);
     gStoredHandlings[vehicle]->TimesReferenced++;
 
     uint64_t oldAddr0 = (uint64_t)gStoredHandlings[vehicle]->OriginalHandling;
