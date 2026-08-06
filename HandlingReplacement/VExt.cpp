@@ -15,7 +15,7 @@ int numWheelsOffset = 0;
 void VExt::Init() {
     uintptr_t addr;
 
-    Logger::Write(INFO, "Version: %s", Versions::IsEnhanced() ? "Enhanced" : "Legacy");
+    LOG(Info, "Version: {}", Versions::IsEnhanced() ? "Enhanced" : "Legacy");
 
     if (!Versions::IsEnhanced()) {
         addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
@@ -26,7 +26,7 @@ void VExt::Init() {
         GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr + 10 + *(int*)(addr + 6));
     }
     if (!GetAddressOfEntity)
-        Logger::Write(ERROR_, "Couldn't find GetAddressOfEntity");
+        LOG(Error, "Couldn't find GetAddressOfEntity");
 
     if (!Versions::IsEnhanced()) {
         addr = Pattern::Find("3C 03 0F 85 ? ? ? ? 48 8B 41 20 48 8B 88");
@@ -36,7 +36,7 @@ void VExt::Init() {
         addr = Pattern::Find("88 90 ? ? ? 00 0F B7 90 ? 00 00 00");
         handlingOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 9;
     }
-    Logger::Write(handlingOffset == 0 ? WARN : DEBUG, "Handling Offset: 0x%X", handlingOffset);
+    LOG(handlingOffset == 0 ? ELogLevel::Warning : ELogLevel::Debug, "Handling Offset: 0x{:X}", handlingOffset);
 
     if (!Versions::IsEnhanced()) {
         addr = Pattern::Find("3B B7 ? ? ? ? 7D 0D");
@@ -48,8 +48,8 @@ void VExt::Init() {
         wheelsPtrOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 8;
         numWheelsOffset = addr == 0 ? 0 : *(int*)(addr + 2);
     }
-    Logger::Write(wheelsPtrOffset == 0 ? WARN : DEBUG, "Wheels Pointer Offset: 0x%X", wheelsPtrOffset);
-    Logger::Write(numWheelsOffset == 0 ? WARN : DEBUG, "Wheel Count Offset: 0x%X", numWheelsOffset);
+    LOG(wheelsPtrOffset == 0 ? ELogLevel::Warning : ELogLevel::Debug, "Wheels Pointer Offset: 0x{:X}", wheelsPtrOffset);
+    LOG(numWheelsOffset == 0 ? ELogLevel::Warning : ELogLevel::Debug, "Wheel Count Offset: 0x{:X}", numWheelsOffset);
 }
 
 uint8_t* VExt::GetAddress(int handle) {

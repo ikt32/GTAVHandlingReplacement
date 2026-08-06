@@ -67,12 +67,12 @@ struct SHandlingContext {
     ~SHandlingContext() {
         if (!OriginalHandling || !ReplacedHandling || !Vehicle)
             return;
-        Logger::Write(DEBUG, "[Handling] Deleting handling for [%p] to [%p]", Vehicle, OriginalHandling);
+        LOG(Debug, "[Handling] Deleting handling for [{:X}] to [{}]", (uintptr_t)Vehicle, (void*)OriginalHandling);
         VExt::SetHandlingPtr(Vehicle, (uint64_t)OriginalHandling);
         for (uint8_t idx = 0; idx < VExt::GetNumWheels(Vehicle); ++idx) {
             VExt::SetWheelHandlingPtr(Vehicle, idx, (uint64_t)OriginalHandling);
         }
-        Logger::Write(DEBUG, "[Handling] Restored handling for [%p] to [%p]", Vehicle, OriginalHandling);
+        LOG(Debug, "[Handling] Restored handling for [{:X}] to [{}]", (uintptr_t)Vehicle, (void*)OriginalHandling);
 
         // Once the entity is pointed back at OriginalHandling (with its own, untouched
         // subhandling array), our clones are no longer referenced by the game and can

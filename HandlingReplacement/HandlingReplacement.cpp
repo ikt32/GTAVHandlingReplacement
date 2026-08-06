@@ -15,7 +15,7 @@ std::unordered_map<int, std::shared_ptr<SHandlingContext>> gStoredHandlings{};
 }
 
 void replaceHandling(int vehicle) {
-    Logger::Write(DEBUG, "[Handling] Replacing handling for vehicle [%X]", vehicle);
+    LOG(Debug, "[Handling] Replacing handling for vehicle [{:X}]", vehicle);
 
     CHandlingData* origHandling = (CHandlingData*)VExt::GetHandlingPtr(vehicle);
 
@@ -53,7 +53,7 @@ void replaceHandling(int vehicle) {
             if (subSize == 0) {
                 // Unknown/unresolvable type - don't guess a size and risk heap
                 // corruption. Fall back to sharing the original, unowned pointer.
-                Logger::Write(WARN, "[Handling] Unknown subhandling type %d for vehicle [%X], sharing original", (int)type, vehicle);
+                LOG(Warning, "[Handling] Unknown subhandling type {} for vehicle [{:X}], sharing original", (int)type, vehicle);
                 subHandlingArray[idx] = origSubHandling;
                 continue;
             }
@@ -91,7 +91,7 @@ void replaceHandling(int vehicle) {
         VExt::SetWheelHandlingPtr(vehicle, idx, (uint64_t)gStoredHandlings[vehicle]->ReplacedHandling);
     }
 
-    Logger::Write(INFO, "[Handling] Changed handling for [0x%X]: [0x%llx] -> [0x%llx]", vehicle, oldAddr0, newAddr0);
+    LOG(Info, "[Handling] Changed handling for [0x{:X}]: [0x{:x}] -> [0x{:x}]", vehicle, oldAddr0, newAddr0);
 }
 
 bool restoreHandling(int vehicle) {
@@ -109,13 +109,13 @@ bool restoreHandling(int vehicle) {
 }
 
 void HR_Init() {
-    Logger::Write(LogLevel::INFO, "Initializing HandlingReplacement");
+    LOG(Info, "Initializing HandlingReplacement");
     VExt::Init();
 }
 
 void HR_Exit() {
     gStoredHandlings.clear();
-    Logger::Write(LogLevel::INFO, "Cleared handlings");
+    LOG(Info, "Cleared handlings");
 }
 
 bool HR_Enable(int vehicle, void** pHandlingData) {
