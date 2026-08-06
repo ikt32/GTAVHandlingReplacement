@@ -162,6 +162,7 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="Main.h" />
     <ClInclude Include="Pattern.h" />
+    <ClInclude Include="Versions.h" />
     <ClInclude Include="VExt.h" />
   </ItemGroup>
   <ItemGroup>
@@ -169,6 +170,7 @@
     <ClCompile Include="HandlingReplacement.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="Pattern.cpp" />
+    <ClCompile Include="Versions.cpp" />
     <ClCompile Include="VExt.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
