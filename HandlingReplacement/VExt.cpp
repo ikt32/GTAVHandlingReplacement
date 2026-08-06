@@ -73,6 +73,7 @@ void VExt::Init() {
 }
 
 uint8_t* VExt::GetAddress(int handle) {
+    if (!GetAddressOfEntity) return nullptr;
     return reinterpret_cast<uint8_t*>(GetAddressOfEntity(handle));
 }
 
