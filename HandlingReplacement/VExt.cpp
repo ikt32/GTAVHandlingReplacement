@@ -2,6 +2,7 @@
 
 #include "Logger.h"
 #include "Pattern.h"
+#include "Versions.h"
 
 namespace {
 uintptr_t(*GetAddressOfEntity)(int entity) = nullptr;
@@ -12,20 +13,42 @@ int numWheelsOffset = 0;
 }
 
 void VExt::Init() {
-    auto addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
-    if (!addr)
-        Logger::Write(ERROR_, "Couldn't find GetAddressOfEntity");
-    GetAddressOfEntity = reinterpret_cast<uintptr_t(*)(int)>(addr);
+    uintptr_t addr;
 
-    addr = Pattern::Find("3C 03 0F 85 ? ? ? ? 48 8B 41 20 48 8B 88");
-    handlingOffset = addr == 0 ? 0 : *(int*)(addr + 0x16);
+    Logger::Write(INFO, "Version: %s", Versions::IsEnhanced() ? "Enhanced" : "Legacy");
+
+    if (!Versions::IsEnhanced()) {
+        addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
+        GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr);
+    }
+    else {
+        addr = Pattern::Find("41 8B 4C 1C ? E8");
+        GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr + 10 + *(int*)(addr + 6));
+    }
+    if (!GetAddressOfEntity)
+        Logger::Write(ERROR_, "Couldn't find GetAddressOfEntity");
+
+    if (!Versions::IsEnhanced()) {
+        addr = Pattern::Find("3C 03 0F 85 ? ? ? ? 48 8B 41 20 48 8B 88");
+        handlingOffset = addr == 0 ? 0 : *(int*)(addr + 0x16);
+    }
+    else {
+        addr = Pattern::Find("88 90 ? ? ? 00 0F B7 90 ? 00 00 00");
+        handlingOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 9;
+    }
     Logger::Write(handlingOffset == 0 ? WARN : DEBUG, "Handling Offset: 0x%X", handlingOffset);
 
-    addr = Pattern::Find("3B B7 ? ? ? ? 7D 0D");
-    wheelsPtrOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 8;
+    if (!Versions::IsEnhanced()) {
+        addr = Pattern::Find("3B B7 ? ? ? ? 7D 0D");
+        wheelsPtrOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 8;
+        numWheelsOffset = addr == 0 ? 0 : *(int*)(addr + 2);
+    }
+    else {
+        addr = Pattern::Find("8B 90 ? ? 00 00 4C 8B ? ? ? 00 00 48 8B 40 20 48 8B 80 B0 00 00 00 4C 8B ? F3 0F 11 44 24 30");
+        wheelsPtrOffset = addr == 0 ? 0 : *(int*)(addr + 2) - 8;
+        numWheelsOffset = addr == 0 ? 0 : *(int*)(addr + 2);
+    }
     Logger::Write(wheelsPtrOffset == 0 ? WARN : DEBUG, "Wheels Pointer Offset: 0x%X", wheelsPtrOffset);
-
-    numWheelsOffset = addr == 0 ? 0 : *(int*)(addr + 2);
     Logger::Write(numWheelsOffset == 0 ? WARN : DEBUG, "Wheel Count Offset: 0x%X", numWheelsOffset);
 }
 
