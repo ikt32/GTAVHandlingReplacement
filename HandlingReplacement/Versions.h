@@ -2,4 +2,5 @@
 
 namespace Versions {
 bool IsEnhanced();
+int GetBuildNumber();
 }

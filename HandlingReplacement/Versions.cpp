@@ -10,6 +10,8 @@
 namespace {
 bool nVersionResolved = false;
 bool nIsEnhanced = false;
+bool nBuildResolved = false;
+int nBuildNumber = 0;
 
     // Reads a StringFileInfo value (e.g. "FileDescription", "ProductName") from the
     // version resource embedded in the given module. This is far more reliable than
@@ -50,6 +52,30 @@ bool nIsEnhanced = false;
 
         return std::string(static_cast<char*>(value));
     }
+
+    // Reads the third component (build number) of the module's FILEVERSION
+    // resource, e.g. for version 1.0.3788.0 this returns 3788.
+    int getModuleVersionBuild(const char* moduleName) {
+        DWORD handle = 0;
+        DWORD size = GetFileVersionInfoSizeA(moduleName, &handle);
+        if (size == 0) {
+            return 0;
+        }
+
+        std::vector<uint8_t> data(size);
+        if (!GetFileVersionInfoA(moduleName, handle, size, data.data())) {
+            return 0;
+        }
+
+        VS_FIXEDFILEINFO* fixedInfo = nullptr;
+        UINT fixedInfoSize = 0;
+        if (!VerQueryValueA(data.data(), "\\", reinterpret_cast<LPVOID*>(&fixedInfo), &fixedInfoSize) ||
+            fixedInfoSize < sizeof(VS_FIXEDFILEINFO)) {
+            return 0;
+        }
+
+        return static_cast<int>(HIWORD(fixedInfo->dwFileVersionLS));
+    }
 }
 
 namespace Versions {
@@ -69,5 +95,18 @@ namespace Versions {
         nVersionResolved = true;
         nIsEnhanced = description.find("Enhanced") != std::string::npos;
         return nIsEnhanced;
+    }
+
+    int GetBuildNumber() {
+        if (nBuildResolved) {
+            return nBuildNumber;
+        }
+
+        char path[MAX_PATH]{};
+        GetModuleFileNameA(nullptr, path, MAX_PATH);
+
+        nBuildNumber = getModuleVersionBuild(path);
+        nBuildResolved = true;
+        return nBuildNumber;
     }
 }

@@ -10,6 +10,35 @@ uintptr_t(*GetAddressOfEntity)(int entity) = nullptr;
 int handlingOffset = 0;
 int wheelsPtrOffset = 0;
 int numWheelsOffset = 0;
+
+void InitGetEntityAddress() {
+    uintptr_t addr = 0;
+    if (!Versions::IsEnhanced()) {
+        if (Versions::GetBuildNumber() >= 3788) {
+            addr = Pattern::Find("85 ED 74 0F 8B CD E8 ? ? ? ? 48 8B F8 48 85 C0 74 2E");
+            GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr + 11 + *(int*)(addr + 7));
+        }
+        else {
+            addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
+            GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr);
+        }
+    }
+    else {
+        if (Versions::GetBuildNumber() >= 1013) {
+            addr = Pattern::Find("41 8B 4C 1C ? E8");
+            GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr + 10 + *(int*)(addr + 6));
+        }
+        else {
+            addr = Pattern::Find("83 F9 FF 74 64 41 89 C8");
+            GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr);
+        }
+    }
+
+    if (!GetAddressOfEntity)
+        LOG(Error, "Couldn't find GetAddressOfEntity");
+    else
+        LOG(Debug, "Found GetAddressOfEntity at 0x{:X}", addr);
+}
 }
 
 void VExt::Init() {
@@ -17,16 +46,7 @@ void VExt::Init() {
 
     LOG(Info, "Version: {}", Versions::IsEnhanced() ? "Enhanced" : "Legacy");
 
-    if (!Versions::IsEnhanced()) {
-        addr = Pattern::Find("83 F9 FF 74 31 4C 8B 0D ? ? ? ? 44 8B C1 49 8B 41 08");
-        GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr);
-    }
-    else {
-        addr = Pattern::Find("41 8B 4C 1C ? E8");
-        GetAddressOfEntity = addr == 0 ? nullptr : reinterpret_cast<uintptr_t(*)(int)>(addr + 10 + *(int*)(addr + 6));
-    }
-    if (!GetAddressOfEntity)
-        LOG(Error, "Couldn't find GetAddressOfEntity");
+    InitGetEntityAddress();
 
     if (!Versions::IsEnhanced()) {
         addr = Pattern::Find("3C 03 0F 85 ? ? ? ? 48 8B 41 20 48 8B 88");
